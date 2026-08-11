@@ -1,0 +1,26 @@
+# Nextflow
+.nextflow*
+work/
+
+# Results
+results/
+
+# Input sequencing data
+data/*.fastq
+data/*.fastq.gz
+data/*.fq
+data/*.fq.gz
+
+# Alignment files
+*.bam
+*.bai
+*.cram
+*.crai
+
+# Variant files
+*.vcf.gz
+*.vcf.gz.tbi
+
+# OS / editors
+.DS_Store
+*~
