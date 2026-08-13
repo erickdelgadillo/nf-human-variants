@@ -1,5 +1,10 @@
 # nf-human-variants
 
+![Version](https://img.shields.io/badge/version-v0.1.0-blue)
+![Nextflow](https://img.shields.io/badge/Nextflow-DSL2-23aa62)
+![Java](https://img.shields.io/badge/Java-17%2B-orange)
+![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow)
+
 A modular **Nextflow DSL2 pipeline for human germline variant calling** from paired-end short-read sequencing data.
 
 The project is being developed as a reproducible bioinformatics workflow covering the main steps from raw sequencing reads to functionally and clinically annotated variants.
