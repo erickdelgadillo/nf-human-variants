@@ -4,7 +4,7 @@ workflow {
 
     reads_ch = Channel
         .fromFilePairs(
-            "${projectDir}/data/*_{R1,R2}.fastq.gz",
+            params.reads,
             checkIfExists: true
         )
 
