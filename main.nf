@@ -1,4 +1,5 @@
 include { FASTQC } from './modules/fastqc'
+include { FASTP } from './modules/fastp'
 
 workflow {
 
@@ -9,4 +10,5 @@ workflow {
         )
 
     FASTQC(reads_ch)
+    FASTP(reads_ch)
 }
