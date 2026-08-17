@@ -151,7 +151,7 @@ The pipeline is intended to eventually support standard human WGS/WES paired-end
 * [x] Automatic paired-end FASTQ discovery
 * [x] FastQC module
 * [x] FastQC result publication
-* [ ] Read filtering and trimming with fastp
+* [x] Read filtering and trimming with fastp
 * [ ] Human reference genome handling
 * [ ] Alignment with BWA-MEM2
 * [ ] BAM sorting and indexing
