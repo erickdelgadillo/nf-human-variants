@@ -14,9 +14,8 @@ workflow {
     FASTP(reads_ch)
 
     reference_ch = Channel.fromPath(
-        "${projectDir}/data/reference/genome.fasta",
+        "${projectDir}/reference/genome.fasta",
         checkIfExists: true
     )
-    BWA_MEM2_INDEX(reference_ch),
-    BWA_MEM2_INDEX.out.view()    
+    BWA_MEM2_INDEX(reference_ch)  
 }
