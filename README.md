@@ -9,7 +9,7 @@ A modular **Nextflow DSL2 pipeline for human germline variant calling** from pai
 
 The project is being developed as a reproducible bioinformatics workflow covering the main steps from raw sequencing reads to functionally and clinically annotated variants.
 
-> **Status:** Work in progress — currently implements automated paired-end FASTQ discovery and FastQC quality control.
+> **Status:** Work in progress — currently implements automated paired-end FASTQ discovery, FastQC quality control, read preprocessing with fastp, BWA-MEM2 reference indexing, and containerized execution with Docker.
 
 ## Overview
 
@@ -18,8 +18,7 @@ The pipeline is designed to progressively implement the following workflow:
 ```text
 Paired-end FASTQ
        │
-       ▼
-     FastQC
+       ├──────────────► FastQC
        │
        ▼
      fastp
@@ -28,10 +27,13 @@ Paired-end FASTQ
    BWA-MEM2
        │
        ▼
-    BAM/CRAM
+      SAM
        │
        ▼
- BAM processing
+ BAM sorting / indexing
+       │
+       ▼
+ Duplicate handling
        │
        ▼
 GATK HaplotypeCaller
@@ -40,7 +42,7 @@ GATK HaplotypeCaller
       VCF
        │
        ▼
-Variant filtering
+ Variant filtering
        │
        ▼
 Functional / clinical annotation
@@ -49,7 +51,8 @@ Functional / clinical annotation
 Prioritized germline variants
 ```
 
-The initial focus is **germline SNP and small indel detection**. Somatic variant calling and tumor/normal analysis are outside the current scope but may be incorporated later.
+The initial focus is **germline SNP and small indel detection**.
+Somatic variant calling, copy-number variation, structural variants, and tumor/normal analysis are outside the current scope and may be incorporated later.
 
 ## Current implementation
 
@@ -86,6 +89,32 @@ Reports are published to:
 ```text
 results/fastqc/
 ```
+### fastp
+
+Paired-end reads are processed with fastp for read filtering and trimming.
+The module produces:
+
+```text
+sample_R1.trimmed.fastq.gz
+sample_R2.trimmed.fastq.gz
+sample_fastp.html
+sample_fastp.json
+```
+
+Reports and processed reads are published to:
+
+```text
+results/fastp/
+```
+### BWA-MEM2 reference indexing
+A reference FASTA file can be indexed using BWA-MEM2.
+The indexing module generates the auxiliary files required by BWA-MEM2 for subsequent read alignment.
+Read alignment itself is implemented as a module but is not yet connected to the main workflow.
+
+### Containerized execution
+Pipeline processes use versioned container images and are executed with Docker.
+Container definitions are associated with individual Nextflow processes, reducing dependence on locally installed bioinformatics tools and improving workflow reproducibility and portability.
+
 
 ## Project structure
 
@@ -94,16 +123,20 @@ nf-human-variants/
 ├── main.nf
 ├── nextflow.config
 ├── modules/
-│   └── fastqc.nf
+│   ├── fastqc.nf
+│   ├── fastp.nf
+│   ├── bwa_mem2.nf
+│   └── bwa_mem2_index.nf
 ├── workflows/
 ├── conf/
 ├── data/
+├── reference/
 ├── results/
 ├── .gitignore
 └── README.md
 ```
 
-Sequencing data and generated results are excluded from Git tracking.
+Sequencing data, reference datasets, generated results, and Nextflow work directories are excluded from Git tracking where appropriate.
 
 ## Requirements
 
@@ -111,18 +144,16 @@ Current development environment:
 
 * Nextflow
 * Java 17+
-* Conda/Mamba
-* FastQC
 * Docker
 
-The project currently uses a dedicated Conda environment for local development. Containerized execution will be incorporated as the workflow develops to improve reproducibility and portability.
+The project currently uses Docker for containerized execution to improve reproducibility and portability.
 
 ## Running the pipeline
 
 Activate the development environment:
 
 ```bash
-mamba activate nf-human-variants
+nextflow run main.nf
 ```
 
 Run the workflow:
@@ -137,23 +168,26 @@ Resume a previous execution using the Nextflow cache:
 nextflow run main.nf -resume
 ```
 
+Input reads can be configured through the Nextflow parameters defined in:
+
+```bash
+nextflow.config
+```
+
 ## Input data
 
 The current development dataset consists of paired-end human germline short reads used for pipeline testing.
-
-Large sequencing files are **not stored in this repository**.
-
+Large sequencing files are not stored in this repository.
+The current reference genome is a small human test reference used for workflow development and does not represent a complete production GRCh38 reference.
 The pipeline is intended to eventually support standard human WGS/WES paired-end datasets through configurable input parameters and sample metadata.
 
 ## Planned development
 
-* [x] Project structure
 * [x] Automatic paired-end FASTQ discovery
 * [x] FastQC module
 * [x] FastQC result publication
 * [x] Read filtering and trimming with fastp
-* [ ] Human reference genome handling
-* [ ] Alignment with BWA-MEM2
+* [x] BWA-MEM2 reference indexing
 * [ ] BAM sorting and indexing
 * [ ] Duplicate handling
 * [ ] Germline variant calling with GATK HaplotypeCaller
@@ -164,6 +198,14 @@ The pipeline is intended to eventually support standard human WGS/WES paired-end
 * [ ] Containerized execution
 * [ ] Test dataset / automated testing
 * [ ] Continuous integration
+
+### Reproducibility and infrastructure
+
+- [x] Project structure
+- [x] Containerized execution with Docker
+- [ ] Production GRCh38 reference support
+- [ ] Test dataset / automated testing
+- [ ] Continuous integration
 
 ## Biological scope
 
