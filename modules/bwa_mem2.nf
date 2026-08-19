@@ -5,6 +5,7 @@ process BWA_MEM2 {
     input: 
     tuple val(sample_id), path(reads)
     path reference
+    path index
 
     output:
     tuple val(sample_id), path("${sample_id}.sam"), emit: sam
@@ -14,7 +15,8 @@ script:
     bwa-mem2 mem \
         -t ${task.cpus} \
         ${reference} \
-        ${reads} \
+        ${reads[0]} \
+        ${reads[1]} \
         > ${sample_id}.sam
     """
 

@@ -6,7 +6,8 @@ process BWA_MEM2_INDEX {
     path reference
 
     output:
-    path "${reference}*"
+    path reference, emit: fasta
+    path "${reference}.*", emit: index
 
     script:
     """
