@@ -184,6 +184,8 @@ The pipeline is intended to eventually support standard human WGS/WES paired-end
 * [x] BWA-MEM2 reference indexing
 * [ ] Connect fastp output to BWA-MEM2
 * [ ] Alignment with BWA-MEM2
+* [ ] BAM sorting and indexing
+* [ ] Alignment quality control
 * [ ] Duplicate handling
 * [ ] Germline variant calling with GATK HaplotypeCaller
 * [ ] Variant filtering
