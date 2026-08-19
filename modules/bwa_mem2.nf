@@ -1,5 +1,7 @@
 process BWA_MEM2 {
 
+    container 'community.wave.seqera.io/library/bwa-mem2:2.2.1--9971ea336a9eddae'
+
     input: 
     tuple val(sample_id), path(reads)
     path reference
