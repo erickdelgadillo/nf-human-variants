@@ -150,12 +150,6 @@ The project currently uses Docker for containerized execution to improve reprodu
 
 ## Running the pipeline
 
-Activate the development environment:
-
-```bash
-nextflow run main.nf
-```
-
 Run the workflow:
 
 ```bash
@@ -188,24 +182,22 @@ The pipeline is intended to eventually support standard human WGS/WES paired-end
 * [x] FastQC result publication
 * [x] Read filtering and trimming with fastp
 * [x] BWA-MEM2 reference indexing
-* [ ] BAM sorting and indexing
+* [ ] Connect fastp output to BWA-MEM2
+* [ ] Alignment with BWA-MEM2
 * [ ] Duplicate handling
 * [ ] Germline variant calling with GATK HaplotypeCaller
 * [ ] Variant filtering
 * [ ] Functional annotation
 * [ ] ClinVar integration
 * [ ] MultiQC reporting
-* [ ] Containerized execution
-* [ ] Test dataset / automated testing
-* [ ] Continuous integration
 
 ### Reproducibility and infrastructure
 
-- [x] Project structure
-- [x] Containerized execution with Docker
-- [ ] Production GRCh38 reference support
-- [ ] Test dataset / automated testing
-- [ ] Continuous integration
+* [x] Project structure
+* [x] Containerized execution with Docker
+* [ ] Production GRCh38 reference support
+* [ ] Test dataset / automated testing
+* [ ] Continuous integration
 
 ## Biological scope
 
