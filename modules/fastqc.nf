@@ -1,5 +1,7 @@
 process FASTQC {
 
+    container 'community.wave.seqera.io/library/fastqc:0.12.1--9971ea336a9eddae'
+
     tag "${sample_id}"
 
     publishDir "${projectDir}/results/fastqc",
