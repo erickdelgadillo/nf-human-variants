@@ -1,6 +1,7 @@
 include { FASTQC } from './modules/fastqc'
 include { FASTP } from './modules/fastp'
 include { BWA_MEM2_INDEX } from './modules/bwa_mem2_index'
+include { BWA_MEM2 } from './modules/bwa_mem2'
 
 workflow {
 
@@ -18,4 +19,10 @@ workflow {
         checkIfExists: true
     )
     BWA_MEM2_INDEX(reference_ch)  
+
+    BWA_MEM2(
+        FASTP.out.reads,
+        BWA_MEM2_INDEX.out.fasta,
+        BWA_MEM2_INDEX.out.index
+)
 }

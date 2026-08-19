@@ -11,7 +11,10 @@ process FASTP {
     tuple val(sample_id), path(reads)
 
     output:
-    tuple val(sample_id), path("${sample_id}_R1.trimmed.fastq.gz"), path("${sample_id}_R2.trimmed.fastq.gz"), emit: reads
+    tuple val(sample_id), 
+        path("${sample_id}_R{1,2}.trimmed.fastq.gz"),
+        emit: reads
+    
     path "${sample_id}_fastp.html", emit: html
     path "${sample_id}_fastp.json", emit: json
 
@@ -27,3 +30,4 @@ process FASTP {
         --thread ${task.cpus}
     """
 }
+
