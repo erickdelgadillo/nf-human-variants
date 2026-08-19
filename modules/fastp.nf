@@ -1,5 +1,7 @@
 process FASTP {
 
+    container 'community.wave.seqera.io/library/fastp:1.3.6--5a6797673f0eb245'
+
     tag "${sample_id}"
 
     publishDir "${projectDir}/results/fastp",
