@@ -17,38 +17,57 @@ The pipeline is designed to progressively implement the following workflow:
 
 ```text
 Paired-end FASTQ
-       │
-       ├──────────────► FastQC
-       │
-       ▼
-     fastp
-       │
-       ▼
-   BWA-MEM2
-       │
-       ▼
-      SAM
-       │
-       ▼
- BAM sorting / indexing
-       │
-       ▼
- Duplicate handling
-       │
-       ▼
-GATK HaplotypeCaller
-       │
-       ▼
-      VCF
-       │
-       ▼
- Variant filtering
-       │
-       ▼
-Functional / clinical annotation
-       │
-       ▼
+      │
+      ├──────────────► Raw-read quality control (FastQC)
+      │
+      ▼
+Read preprocessing / trimming (fastp)
+      │
+      ▼
+Read alignment to reference genome (BWA-MEM2)
+      │
+      ▼
+     SAM
+      │
+      ▼
+BAM sorting (samtools)
+      │
+      ▼
+BAM indexing (samtools)
+      │
+      ▼
+Duplicate marking / handling (GATK MarkDuplicates)
+      │
+      ▼
+Germline variant calling (GATK HaplotypeCaller)
+      │
+      ▼
+     gVCF
+      │
+      ▼
+Genotyping (GATK GenotypeGVCFs)
+      │
+      ▼
+     VCF
+      │
+      ▼
+Variant filtering (GATK / bcftools)
+      │
+      ▼
+Variant quality control (bcftools)
+      │
+      ▼
+Functional / clinical annotation (VEP / ClinVar)
+      │
+      ▼
 Prioritized germline variants
+
+
+Reference FASTA
+      │
+      ├──► BWA index (BWA-MEM2)
+      ├──► FASTA index / .fai (samtools faidx)
+      └──► Sequence dictionary / .dict (GATK CreateSequenceDictionary)
 ```
 
 The initial focus is **germline SNP and small indel detection**.
@@ -177,21 +196,28 @@ The pipeline is intended to eventually support standard human WGS/WES paired-end
 
 ## Planned development
 
-* [x] Automatic paired-end FASTQ discovery
-* [x] FastQC module
-* [x] FastQC result publication
-* [x] Read filtering and trimming with fastp
-* [x] BWA-MEM2 reference indexing
-* [ ] Connect fastp output to BWA-MEM2
-* [ ] Alignment with BWA-MEM2
-* [ ] BAM sorting and indexing
-* [ ] Alignment quality control
-* [ ] Duplicate handling
-* [ ] Germline variant calling with GATK HaplotypeCaller
-* [ ] Variant filtering
-* [ ] Functional annotation
-* [ ] ClinVar integration
-* [ ] MultiQC reporting
+## Planned development
+
+- [x] Automatic paired-end FASTQ discovery
+- [x] FastQC module
+- [x] FastQC result publication
+- [x] Read filtering and trimming with fastp
+- [x] BWA-MEM2 reference indexing
+- [x] Connect fastp output to BWA-MEM2
+- [x] Alignment with BWA-MEM2
+- [x] BAM sorting with samtools
+- [ ] BAM indexing with samtools
+- [ ] Reference FASTA indexing with samtools faidx
+- [ ] Reference sequence dictionary with GATK
+- [ ] Alignment quality control
+- [ ] Duplicate handling
+- [ ] Germline variant calling with GATK HaplotypeCaller
+- [ ] Genotyping with GATK GenotypeGVCFs
+- [ ] Variant filtering
+- [ ] Variant quality control
+- [ ] Functional annotation
+- [ ] ClinVar integration
+- [ ] MultiQC reporting
 
 ### Reproducibility and infrastructure
 
