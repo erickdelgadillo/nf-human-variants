@@ -7,7 +7,7 @@
 
 A modular **Nextflow DSL2 pipeline for human germline variant calling** from paired-end short-read sequencing data.
 
-The project is being developed as a reproducible bioinformatics workflow covering the main steps from raw sequencing reads to functionally and clinically annotated variants.
+A modular Nextflow DSL2 workflow implementing the first stages of a reproducible human germline variant-calling pipeline, from paired-end FASTQ quality control through read preprocessing and alignment.
 
 > **Status:** Work in progress — currently implements automated paired-end FASTQ discovery, FastQC quality control, read preprocessing with fastp, BWA-MEM2 reference indexing, and containerized execution with Docker.
 
@@ -193,8 +193,6 @@ The current development dataset consists of paired-end human germline short read
 Large sequencing files are not stored in this repository.
 The current reference genome is a small human test reference used for workflow development and does not represent a complete production GRCh38 reference.
 The pipeline is intended to eventually support standard human WGS/WES paired-end datasets through configurable input parameters and sample metadata.
-
-## Planned development
 
 ## Planned development
 
