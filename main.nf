@@ -5,6 +5,7 @@ include { BWA_MEM2 } from './modules/local/bwa_mem2'
 include { SAMTOOLS_SORT } from './modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX } from './modules/nf-core/samtools/index/main'
 include { SAMTOOLS_FAIDX } from './modules/nf-core/samtools/faidx/main'
+include { GATK4_CREATESEQUENCEDICTIONARY } from './modules/nf-core/gatk4/createsequencedictionary/main'
 
 workflow {
 
@@ -22,6 +23,15 @@ workflow {
         checkIfExists: true
     )
 
+    reference_gatk_ch = reference_ch.map { fasta ->
+
+        def meta = [
+            id: 'reference'
+        ]
+
+        tuple(meta, fasta)
+    }
+
     BWA_MEM2_INDEX(reference_ch)
 
     reference_faidx_ch = reference_ch.map { fasta ->
@@ -36,6 +46,10 @@ workflow {
     SAMTOOLS_FAIDX(
         reference_faidx_ch,
         false
+    )
+
+    GATK4_CREATESEQUENCEDICTIONARY(
+        reference_gatk_ch
     )
 
     BWA_MEM2(
