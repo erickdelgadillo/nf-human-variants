@@ -4,6 +4,7 @@ include { BWA_MEM2_INDEX } from './modules/local/bwa_mem2_index'
 include { BWA_MEM2 } from './modules/local/bwa_mem2'
 include { SAMTOOLS_SORT } from './modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX } from './modules/nf-core/samtools/index/main'
+include { SAMTOOLS_FAIDX } from './modules/nf-core/samtools/faidx/main'
 
 workflow {
 
@@ -20,37 +21,49 @@ workflow {
         "${projectDir}/reference/genome.fasta",
         checkIfExists: true
     )
-    BWA_MEM2_INDEX(reference_ch)  
+
+    BWA_MEM2_INDEX(reference_ch)
+
+    reference_faidx_ch = reference_ch.map { fasta ->
+
+        def meta = [
+            id: 'reference'
+        ]
+
+        tuple(meta, fasta, [])
+    }
+
+    SAMTOOLS_FAIDX(
+        reference_faidx_ch,
+        false
+    )
 
     BWA_MEM2(
         FASTP.out.reads,
         BWA_MEM2_INDEX.out.fasta,
         BWA_MEM2_INDEX.out.index
-)
+    )
 
-sam_ch = BWA_MEM2.out.sam.map { sample_id, sam ->
+    sam_ch = BWA_MEM2.out.sam.map { sample_id, sam ->
 
-    def meta = [
-        id: sample_id,
-        single_end: false
-    ]
+        def meta = [
+            id: sample_id,
+            single_end: false
+        ]
 
-    tuple(meta, sam)
-}
+        tuple(meta, sam)
+    }
 
-sam_ch.view()
+    reference_for_sort = Channel.value([[:], [], []])
+    index_format = Channel.value('')
 
-reference_for_sort = Channel.value([[:], [], []])
-index_format = Channel.value('')
+    SAMTOOLS_SORT(
+        sam_ch,
+        reference_for_sort,
+        index_format
+    )
 
-SAMTOOLS_SORT(
-    sam_ch,
-    reference_for_sort,
-    index_format
-)
-
-SAMTOOLS_INDEX(
-    SAMTOOLS_SORT.out.bam
-)
-
+    SAMTOOLS_INDEX(
+        SAMTOOLS_SORT.out.bam
+    )
 }
