@@ -3,6 +3,7 @@ include { FASTP } from './modules/local/fastp'
 include { BWA_MEM2_INDEX } from './modules/local/bwa_mem2_index'
 include { BWA_MEM2 } from './modules/local/bwa_mem2'
 include { SAMTOOLS_SORT } from './modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX } from './modules/nf-core/samtools/index/main'
 
 workflow {
 
@@ -46,6 +47,10 @@ SAMTOOLS_SORT(
     sam_ch,
     reference_for_sort,
     index_format
+)
+
+SAMTOOLS_INDEX(
+    SAMTOOLS_SORT.out.bam
 )
 
 }
