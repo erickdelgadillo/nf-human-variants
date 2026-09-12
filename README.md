@@ -310,15 +310,15 @@ metadata.
 -   [x] Connect fastp output to BWA-MEM2
 -   [x] Alignment with BWA-MEM2
 -   [x] BAM sorting with samtools
--   [ ] BAM indexing with samtools
--   [ ] Alignment quality control
+-   [x] BAM indexing with samtools
+-   [x] Alignment quality control
 -   [ ] MultiQC reporting
 
 ### Reference preparation
 
 -   [x] BWA-MEM2 reference indexing
--   [ ] Reference FASTA indexing with `samtools faidx`
--   [ ] Reference sequence dictionary with GATK
+-   [x] Reference FASTA indexing with `samtools faidx`
+-   [x] Reference sequence dictionary with GATK
 
 ### Variant calling
 
