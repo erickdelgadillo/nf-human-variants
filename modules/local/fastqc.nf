@@ -2,17 +2,17 @@ process FASTQC {
 
     container 'community.wave.seqera.io/library/fastqc:0.12.1--9971ea336a9eddae'
 
-    tag "${sample_id}"
+    tag "${meta.id}"
 
     publishDir "${projectDir}/results/fastqc",
         mode: 'copy'
 
     input:
-    tuple val(sample_id), path(reads)
+    tuple val(meta), path(reads)
 
     output:
-    tuple val(sample_id), path("*_fastqc.html"), emit: html
-    tuple val(sample_id), path("*_fastqc.zip"), emit: zip
+    tuple val(meta), path("*_fastqc.html"), emit: html
+    tuple val(meta), path("*_fastqc.zip"), emit: zip
 
     script:
     """

@@ -2,17 +2,14 @@
 // Módulos del pipeline
 // -----------------------------------------------------------------------------
 
-include { FASTQC } from './modules/local/fastqc'
-include { FASTP } from './modules/local/fastp'
-
-include { BWA_MEM2_INDEX } from './modules/local/bwa_mem2_index'
-include { BWA_MEM2 } from './modules/local/bwa_mem2'
-
-include { SAMTOOLS_SORT } from './modules/nf-core/samtools/sort/main'
-include { SAMTOOLS_INDEX } from './modules/nf-core/samtools/index/main'
-include { SAMTOOLS_FAIDX } from './modules/nf-core/samtools/faidx/main'
-include { SAMTOOLS_FLAGSTAT } from './modules/nf-core/samtools/flagstat/main'
-
+include { FASTQC                         } from './modules/local/fastqc'
+include { FASTP                          } from './modules/local/fastp'
+include { BWA_MEM2_INDEX                 } from './modules/local/bwa_mem2_index'
+include { BWA_MEM2                       } from './modules/local/bwa_mem2'
+include { SAMTOOLS_SORT                  } from './modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX                 } from './modules/nf-core/samtools/index/main'
+include { SAMTOOLS_FAIDX                 } from './modules/nf-core/samtools/faidx/main'
+include { SAMTOOLS_FLAGSTAT              } from './modules/nf-core/samtools/flagstat/main'
 include { GATK4_CREATESEQUENCEDICTIONARY } from './modules/nf-core/gatk4/createsequencedictionary/main'
 
 
@@ -32,10 +29,19 @@ workflow {
     // (sample_id, [R1.fastq.gz, R2.fastq.gz])
     //
     reads_ch = Channel
-        .fromFilePairs(
-            params.reads,
-            checkIfExists: true
+    .fromFilePairs(
+        params.reads,
+        checkIfExists: true
+    )
+    .map { sample_id, reads ->
+        tuple(
+            [
+                id: sample_id,
+                single_end: false
+            ],
+            reads
         )
+    }
 
 
     // -------------------------------------------------------------------------
@@ -152,31 +158,6 @@ workflow {
 
 
     // -------------------------------------------------------------------------
-    // 9. Adaptación del output de BWA al formato esperado por nf-core
-    // -------------------------------------------------------------------------
-    //
-    // Nuestro módulo BWA_MEM2 devuelve:
-    //
-    // (sample_id, sam)
-    //
-    // Pero SAMTOOLS_SORT espera:
-    //
-    // (meta, sam/bam)
-    //
-    // Por eso transformamos sample_id en un mapa de metadata.
-    //
-    sam_ch = BWA_MEM2.out.sam.map { sample_id, sam ->
-
-        def meta = [
-            id: sample_id,
-            single_end: false
-        ]
-
-        tuple(meta, sam)
-    }
-
-
-    // -------------------------------------------------------------------------
     // 10. Parámetros auxiliares para SAMTOOLS_SORT
     // -------------------------------------------------------------------------
     //
@@ -198,9 +179,9 @@ workflow {
     // El SAM generado por BWA se convierte en un BAM ordenado.
     //
     SAMTOOLS_SORT(
-        sam_ch,
-        reference_for_sort,
-        index_format
+    BWA_MEM2.out.sam,
+    reference_for_sort,
+    index_format
     )
 
 
