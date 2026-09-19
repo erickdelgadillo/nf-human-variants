@@ -5,432 +5,350 @@
 ![Java](https://img.shields.io/badge/Java-17%2B-orange)
 ![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow)
 
-> A modular Nextflow DSL2 pipeline for human germline variant calling
-> from paired-end short-read sequencing data.
+A modular Nextflow DSL2 pipeline for learning and implementing a reproducible human germline variant calling workflow.
 
-`nf-human-variants` is a bioinformatics workflow developed to build a
-reproducible human germline variant-calling pipeline while exploring
-modular Nextflow DSL2 workflow design, containerized execution, and
-standard NGS processing tools.
+The project is being developed incrementally, following modern Nextflow and nf-core design principles. The current implementation covers read preprocessing, reference preparation, alignment, BAM processing, and basic alignment quality control.
 
-The current implementation covers the workflow from paired-end FASTQ
-discovery through quality control, preprocessing, BWA-MEM2 alignment,
-and BAM sorting.
+> [!IMPORTANT]
+> This project is intended for research, training, and workflow-development purposes. It is not intended for clinical diagnosis or medical decision-making.
 
-> **Status:** Work in progress. Variant calling, genotyping, filtering,
-> annotation, and several reference-preparation and alignment-QC stages
-> are still under development.
+---
 
-------------------------------------------------------------------------
+## Current workflow
 
-## Overview
+The pipeline currently implements:
 
-The pipeline is being developed progressively toward the following
-workflow:
-
-``` text
+```text
 Paired-end FASTQ
-      |
-      +----------------> Raw-read quality control (FastQC)
-      |
-      v
-Read preprocessing / trimming (fastp)
-      |
-      v
-Read alignment to reference genome (BWA-MEM2)
-      |
-      v
-     SAM
-      |
-      v
-BAM sorting (samtools)
-      |
-      v
-BAM indexing (samtools)
-      |
-      v
-Duplicate marking / handling (GATK MarkDuplicates)
-      |
-      v
-Germline variant calling (GATK HaplotypeCaller)
-      |
-      v
-     gVCF
-      |
-      v
-Genotyping (GATK GenotypeGVCFs)
-      |
-      v
-     VCF
-      |
-      v
-Variant filtering (GATK / bcftools)
-      |
-      v
-Variant quality control (bcftools)
-      |
-      v
-Functional / clinical annotation (VEP / ClinVar)
-      |
-      v
-Prioritized germline variants
+       │
+       ├── FastQC
+       │
+       ▼
+     fastp
+       │
+       ▼
+   BWA-MEM2
+       │
+       ▼
+ samtools sort
+       │
+       ▼
+ samtools index
+       │
+       ▼
+samtools flagstat
+```
 
+Reference preparation is performed independently:
 
+```text
 Reference FASTA
-      |
-      +---> BWA index (BWA-MEM2)
-      +---> FASTA index / .fai (samtools faidx)
-      +---> Sequence dictionary / .dict (GATK CreateSequenceDictionary)
+      │
+      ├── BWA-MEM2 index
+      ├── samtools faidx
+      └── GATK CreateSequenceDictionary
 ```
 
-The initial biological scope is **germline SNP and small-indel
-detection**.
+This produces the reference files required for downstream alignment and variant calling.
 
-Somatic variant calling, copy-number variation, structural variants, and
-tumor/normal analysis are outside the current scope.
+---
 
-------------------------------------------------------------------------
+## Architecture
 
-## Current implementation
+The pipeline uses a modular Nextflow DSL2 structure.
 
-### Paired-end FASTQ discovery
-
-Input reads are discovered automatically using Nextflow file-pair
-channels.
-
-Files following conventions such as:
-
-``` text
-sample_R1.fastq.gz
-sample_R2.fastq.gz
+```text
+main.nf
+    │
+    ▼
+workflows/
+└── nf_human_variants.nf
+        │
+        ├── PREPARE_REFERENCE
+        │
+        └── PROCESS_READS
+                │
+                ▼
+          individual modules
 ```
 
-are paired and propagated through the workflow with their sample
-identifier.
+Current project structure:
 
-### FastQC
-
-Raw paired-end reads are evaluated with **FastQC** before preprocessing.
-
-Typical outputs include:
-
-``` text
-sample_R1_fastqc.html
-sample_R1_fastqc.zip
-sample_R2_fastqc.html
-sample_R2_fastqc.zip
-```
-
-Reports are published under:
-
-``` text
-results/fastqc/
-```
-
-### fastp
-
-Paired-end reads are filtered and trimmed with **fastp**.
-
-The module produces processed reads together with HTML and JSON reports:
-
-``` text
-sample_R1.trimmed.fastq.gz
-sample_R2.trimmed.fastq.gz
-sample_fastp.html
-sample_fastp.json
-```
-
-Outputs are published under:
-
-``` text
-results/fastp/
-```
-
-### BWA-MEM2 reference indexing
-
-The configured reference FASTA is indexed with **BWA-MEM2** before
-alignment.
-
-The indexing process generates the auxiliary files required by BWA-MEM2
-and exposes them to the downstream alignment process.
-
-### BWA-MEM2 alignment
-
-Trimmed reads from `fastp` are connected directly to the **BWA-MEM2**
-alignment module.
-
-The current workflow therefore implements:
-
-``` text
-FASTQ
-  |
-  v
-fastp
-  |
-  v
-BWA-MEM2
-  |
-  v
-SAM
-```
-
-Alignment is no longer an isolated module: it is connected to the main
-workflow.
-
-### BAM sorting
-
-SAM output produced by BWA-MEM2 is transformed into the metadata
-structure required by the nf-core `samtools/sort` module and passed
-downstream for BAM sorting.
-
-The currently connected processing path is therefore:
-
-``` text
-paired FASTQ
-     |
-     +----> FastQC
-     |
-     v
-   fastp
-     |
-     v
- BWA-MEM2
-     |
-     v
-    SAM
-     |
-     v
-samtools sort
-     |
-     v
-sorted BAM
-```
-
-BAM indexing and subsequent alignment-processing stages are not yet
-implemented.
-
-### Containerized execution
-
-Pipeline processes use versioned container images and execute with
-**Docker**.
-
-Associating software environments with individual processes reduces
-dependence on locally installed bioinformatics tools and improves
-workflow reproducibility and portability.
-
-------------------------------------------------------------------------
-
-## Project structure
-
-``` text
+```text
 nf-human-variants/
 ├── main.nf
 ├── nextflow.config
+│
+├── conf/
+│   └── test.config
+│
+├── workflows/
+│   └── nf_human_variants.nf
+│
+├── subworkflows/
+│   └── local/
+│       ├── prepare_reference.nf
+│       └── process_reads.nf
+│
 ├── modules/
 │   ├── local/
 │   │   ├── fastqc.nf
 │   │   ├── fastp.nf
 │   │   ├── bwa_mem2.nf
 │   │   └── bwa_mem2_index.nf
+│   │
 │   └── nf-core/
+│       ├── gatk4/
 │       └── samtools/
-│           └── sort/
-├── workflows/
-├── conf/
+│
 ├── data/
 ├── reference/
-├── results/
-├── .gitignore
-└── README.md
+├── scripts/
+└── results/
 ```
 
-Sequencing data, reference datasets, generated results, and Nextflow
-work directories are excluded from Git tracking where appropriate.
+The top-level `main.nf` acts only as the pipeline entry point.
 
-------------------------------------------------------------------------
+The main workflow is defined in:
+
+```text
+workflows/nf_human_variants.nf
+```
+
+while related processes are grouped into reusable subworkflows.
+
+### `PREPARE_REFERENCE`
+
+Prepares the reference genome using:
+
+- BWA-MEM2 indexing
+- `samtools faidx`
+- GATK `CreateSequenceDictionary`
+
+### `PROCESS_READS`
+
+Performs sample-level processing using:
+
+- FastQC
+- fastp
+- BWA-MEM2
+- samtools sort
+- samtools index
+- samtools flagstat
+
+Sample metadata are propagated through the workflow using the conventional DSL2 structure:
+
+```text
+(meta, data)
+```
+
+---
 
 ## Requirements
 
-The current development environment requires:
+The current development environment uses:
 
--   Nextflow
--   Java 17+
--   Docker
+- Nextflow
+- Java
+- Docker
 
-Bioinformatics tools used by individual processes are provided through
-containers rather than requiring manual installation on the host.
+Software dependencies used by individual processes are provided through containers.
 
-------------------------------------------------------------------------
+Check your Nextflow installation with:
 
-## Running the pipeline
-
-Run the workflow with:
-
-``` bash
-nextflow run main.nf
+```bash
+nextflow -version
 ```
 
-Resume a previous execution using the Nextflow cache:
+Check Docker with:
 
-``` bash
-nextflow run main.nf -resume
+```bash
+docker --version
 ```
 
-Input reads and other workflow parameters are configured through
-`nextflow.config`.
+---
 
-------------------------------------------------------------------------
+## Test profile
 
-## Input data
+A small test dataset is available for development and pipeline validation.
 
-The current development dataset consists of paired-end human germline
-short reads used for pipeline testing.
+The test configuration is defined in:
 
-Large sequencing files are not stored in this repository.
+```text
+conf/test.config
+```
 
-The current reference genome is a small human test reference used for
-workflow development and does **not** represent a complete production
-GRCh38 reference.
+Run the test pipeline with:
 
-The pipeline is intended to eventually support standard human WGS/WES
-paired-end datasets through configurable input parameters and sample
-metadata.
+```bash
+nextflow run main.nf -profile test
+```
 
-------------------------------------------------------------------------
+To reuse cached tasks during development:
+
+```bash
+nextflow run main.nf -profile test -resume
+```
+
+The test profile currently defines:
+
+- synthetic paired-end FASTQ reads
+- a small test reference genome
+- a dedicated test output directory
+
+This allows the workflow architecture to be tested rapidly without requiring large human sequencing datasets.
+
+---
+
+## Configuration
+
+General pipeline parameters are defined in:
+
+```text
+nextflow.config
+```
+
+The current main parameters include:
+
+```nextflow
+params {
+    reads  = null
+    fasta  = null
+    outdir = "${projectDir}/results"
+}
+```
+
+The test profile overrides these parameters with the bundled development dataset.
+
+Execution resources are also configured independently from process implementation. For example, memory requirements for GATK and CPU requirements for FastQC are defined through Nextflow configuration rather than by modifying upstream nf-core modules.
+
+---
+
+## nf-core modules
+
+Where suitable, the pipeline uses official nf-core modules.
+
+Currently included nf-core modules include:
+
+- `samtools/sort`
+- `samtools/index`
+- `samtools/faidx`
+- `samtools/flagstat`
+- `gatk4/createsequencedictionary`
+
+Local modules are currently used for:
+
+- FastQC
+- fastp
+- BWA-MEM2
+- BWA-MEM2 indexing
+
+Upstream nf-core module code is kept unchanged.
+
+---
 
 ## Development status
 
-### Read processing and alignment
+### Input and preprocessing
 
--   [x] Automatic paired-end FASTQ discovery
--   [x] FastQC module
--   [x] FastQC result publication
--   [x] Read filtering and trimming with fastp
--   [x] BWA-MEM2 reference indexing
--   [x] Connect fastp output to BWA-MEM2
--   [x] Alignment with BWA-MEM2
--   [x] BAM sorting with samtools
--   [x] BAM indexing with samtools
--   [x] Alignment quality control
--   [ ] MultiQC reporting
+- [x] Paired-end FASTQ discovery
+- [x] Sample metadata channels
+- [x] FastQC
+- [x] fastp
 
 ### Reference preparation
 
--   [x] BWA-MEM2 reference indexing
--   [x] Reference FASTA indexing with `samtools faidx`
--   [x] Reference sequence dictionary with GATK
+- [x] BWA-MEM2 reference indexing
+- [x] FASTA `.fai` generation
+- [x] GATK sequence dictionary generation
+
+### Alignment and BAM processing
+
+- [x] BWA-MEM2 alignment
+- [x] BAM sorting
+- [x] BAM indexing
+- [x] Alignment QC with `samtools flagstat`
+- [ ] Additional alignment statistics
+- [ ] Duplicate handling
 
 ### Variant calling
 
--   [ ] Duplicate handling
--   [ ] Germline variant calling with GATK HaplotypeCaller
--   [ ] Genotyping with GATK GenotypeGVCFs
--   [ ] Variant filtering
--   [ ] Variant quality control
+- [ ] GATK HaplotypeCaller
+- [ ] gVCF generation
+- [ ] GenotypeGVCFs
+- [ ] Variant filtering
+- [ ] Variant QC
 
 ### Annotation
 
--   [ ] Functional annotation
--   [ ] ClinVar integration
+- [ ] Variant annotation
+- [ ] VEP
+- [ ] ClinVar integration
 
-### Reproducibility and infrastructure
+### Workflow engineering
 
--   [x] Modular Nextflow DSL2 project structure
--   [x] Containerized execution with Docker
--   [ ] Production GRCh38 reference support
--   [ ] Test dataset / automated testing
--   [ ] Continuous integration
+- [x] DSL2 modules
+- [x] `(meta, data)` channel structure
+- [x] Local subworkflows
+- [x] Top-level workflow
+- [x] Test profile
+- [ ] Samplesheet-based input
+- [ ] Small real human test dataset
+- [ ] Automated end-to-end testing
+- [ ] Continuous integration
+- [ ] Production GRCh38 reference configuration
 
-------------------------------------------------------------------------
+---
 
-## Biological scope
+## Planned input model
 
-The workflow is intended to identify genomic positions where an
-individual's sequencing data provide evidence for differences from the
-human reference genome.
+The current test pipeline discovers paired-end FASTQ files directly.
 
-In simplified form:
+The next development step is to replace this with a samplesheet-based interface:
 
-``` text
-Sequencing reads
-      +
-Human reference genome
-      |
-      v
-Read alignment
-      |
-      v
-Evidence for genomic differences
-      |
-      v
-Variant calling
-      |
-      v
-SNPs and small indels
+```bash
+nextflow run main.nf \
+    --input samplesheet.csv \
+    --outdir results
 ```
 
-A detected variant is **not equivalent to a pathogenic variant or a
-clinical diagnosis**.
+This will allow multiple samples and associated metadata to be represented explicitly and reproducibly.
 
-Downstream annotation and interpretation are required to determine
-genomic context, predicted molecular consequence, population frequency,
-and available clinical evidence.
+A small set of publicly available human sequencing samples will then be used as a realistic end-to-end test dataset.
 
-------------------------------------------------------------------------
+---
 
-## Project goals
+## Development roadmap
 
-This project focuses on:
+The immediate development priorities are:
 
--   Reproducible workflow development with Nextflow DSL2
--   Modular bioinformatics pipeline architecture
--   Human NGS data processing
--   FASTQ, SAM, BAM/CRAM, and VCF handling
--   Germline variant calling
--   Functional and clinical variant annotation
--   Containerized software environments
--   Transparent and documented bioinformatics analysis
+1. Implement samplesheet-based sample input.
+2. Validate the workflow with a small real human sequencing dataset.
+3. Complete BAM preparation and duplicate handling.
+4. Implement GATK germline variant calling.
+5. Add variant filtering and QC.
+6. Add functional and clinical annotation resources.
+7. Add automated testing and CI.
 
-The repository is also intended as a practical development project for
-progressively implementing the major stages of a modern germline
-variant-calling workflow rather than presenting an already completed
-production pipeline.
+---
 
-------------------------------------------------------------------------
+## Purpose
 
-## Roadmap
+This repository is being developed both as a functional genomics workflow and as a practical project for learning:
 
-The next development stages are expected to extend the current alignment
-workflow toward analysis-ready BAM files and germline variant calling.
+- Nextflow DSL2
+- nf-core module conventions
+- workflow modularization
+- metadata-aware channels
+- containerized reproducibility
+- human germline variant analysis
+- reproducible bioinformatics software development
 
-Near-term priorities include:
+The pipeline is intentionally developed incrementally so that each workflow component can be implemented, tested, and understood independently.
 
-1.  BAM indexing with samtools
-2.  Reference FASTA indexing
-3.  Reference sequence dictionary generation
-4.  Alignment quality control
-5.  Duplicate handling
-6.  GATK HaplotypeCaller integration
-7.  Genotyping and variant filtering
-8.  MultiQC reporting
-9.  Automated testing and continuous integration
+---
 
-Longer-term development will address production GRCh38 support and
-functional and clinical variant annotation.
+## License
 
-------------------------------------------------------------------------
+See the repository license for usage terms.
 
-## Disclaimer
-
-This workflow is being developed for **research, training, and portfolio
-purposes**.
-
-It is not validated for clinical diagnosis or medical decision-making.
-
-------------------------------------------------------------------------
-
-## Author
-
-**Erick Delgadillo-Nuño**
-
-Bioinformatics · NGS · Nextflow · Reproducible scientific workflows
