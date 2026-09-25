@@ -49,7 +49,7 @@ Reference FASTA
       └── GATK CreateSequenceDictionary
 ```
 
-This produces the reference files required for downstream alignment and variant calling.
+This produces the reference files required for downstream alignment and future variant calling.
 
 ---
 
@@ -78,29 +78,25 @@ Current project structure:
 nf-human-variants/
 ├── main.nf
 ├── nextflow.config
-│
 ├── conf/
 │   └── test.config
-│
 ├── workflows/
 │   └── nf_human_variants.nf
-│
 ├── subworkflows/
 │   └── local/
 │       ├── prepare_reference.nf
 │       └── process_reads.nf
-│
 ├── modules/
 │   ├── local/
 │   │   ├── fastqc.nf
 │   │   ├── fastp.nf
 │   │   ├── bwa_mem2.nf
 │   │   └── bwa_mem2_index.nf
-│   │
 │   └── nf-core/
 │       ├── gatk4/
 │       └── samtools/
-│
+├── docs/
+│   └── project-context/
 ├── data/
 ├── reference/
 ├── scripts/
@@ -170,7 +166,7 @@ docker --version
 
 ## Test profile
 
-A small test dataset is available for development and pipeline validation.
+A small test dataset is used for development and pipeline validation.
 
 The test configuration is defined in:
 
@@ -198,6 +194,12 @@ The test profile currently defines:
 
 This allows the workflow architecture to be tested rapidly without requiring large human sequencing datasets.
 
+Concrete executions and their outcomes should be recorded in:
+
+```text
+docs/project-context/TEST_EVIDENCE.md
+```
+
 ---
 
 ## Configuration
@@ -218,9 +220,9 @@ params {
 }
 ```
 
-The test profile overrides these parameters with the bundled development dataset.
+The test profile overrides these parameters with the development dataset.
 
-Execution resources are also configured independently from process implementation. For example, memory requirements for GATK and CPU requirements for FastQC are defined through Nextflow configuration rather than by modifying upstream nf-core modules.
+Execution resources are configured independently from process implementation. For example, memory requirements for GATK and CPU requirements for FastQC are defined through Nextflow configuration rather than by modifying upstream nf-core modules.
 
 ---
 
@@ -293,6 +295,7 @@ Upstream nf-core module code is kept unchanged.
 - [x] Top-level workflow
 - [x] Test profile
 - [ ] Samplesheet-based input
+- [ ] Multi-sample validation
 - [ ] Small real human test dataset
 - [ ] Automated end-to-end testing
 - [ ] Continuous integration
@@ -312,23 +315,71 @@ nextflow run main.nf \
     --outdir results
 ```
 
-This will allow multiple samples and associated metadata to be represented explicitly and reproducibly.
+Initial target schema:
 
-A small set of publicly available human sequencing samples will then be used as a realistic end-to-end test dataset.
+```csv
+sample,fastq_1,fastq_2
+NA12878,path/to/NA12878_R1.fastq.gz,path/to/NA12878_R2.fastq.gz
+```
+
+The initial implementation should remain minimal. Additional metadata such as library, lane, platform, and read-group fields should only be added when required by downstream workflow design.
 
 ---
 
 ## Development roadmap
 
-The immediate development priorities are:
+### NOW
 
-1. Implement samplesheet-based sample input.
-2. Validate the workflow with a small real human sequencing dataset.
-3. Complete BAM preparation and duplicate handling.
-4. Implement GATK germline variant calling.
-5. Add variant filtering and QC.
-6. Add functional and clinical annotation resources.
-7. Add automated testing and CI.
+1. Implement validated `samplesheet.csv` input.
+2. Define the explicit metadata contract.
+3. Validate the workflow with multiple samples.
+
+### NEXT
+
+4. Add reproducible read groups.
+5. Implement duplicate handling in a separate BAM-processing unit.
+6. Define the `analysis-ready BAM` boundary.
+7. Add GATK HaplotypeCaller in gVCF mode.
+
+### LATER
+
+8. Add cohort genotyping with GenotypeGVCFs.
+9. Add variant filtering and QC.
+10. Add VEP and ClinVar annotation.
+11. Add MultiQC.
+12. Add reproducible GRCh38 configuration.
+13. Add automated testing and CI.
+
+---
+
+## Project continuity documentation
+
+Development-state and architectural context are versioned under:
+
+```text
+docs/project-context/
+```
+
+Key documents:
+
+- `CURRENT_PROJECT_CHECKPOINT.md` — verified current state and next development unit
+- `PROJECT_CONTEXT.md` — project history, architecture, design rationale, and limitations
+- `DECISIONS.md` — architectural decisions
+- `NEXT_TASK.md` — exact current development task
+- `ROADMAP.md` — ordered NOW / NEXT / LATER plan
+- `TEST_EVIDENCE.md` — concrete execution records and test evidence
+- `LEARNING_LOG.md` — technical concepts learned through the project
+
+For implementation-state questions, the current GitHub default branch remains authoritative.
+
+Always distinguish between:
+
+- **IMPLEMENTED**
+- **TESTED**
+- **DOCUMENTED**
+- **PLANNED**
+
+These states are not equivalent.
 
 ---
 
@@ -351,4 +402,3 @@ The pipeline is intentionally developed incrementally so that each workflow comp
 ## License
 
 See the repository license for usage terms.
-
