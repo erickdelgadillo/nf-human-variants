@@ -1,4 +1,4 @@
-# nf-human-variants
+# nf-human-variants 🧬
 
 ![Version](https://img.shields.io/badge/version-v0.1.0-blue)
 ![Nextflow](https://img.shields.io/badge/Nextflow-DSL2-23aa62)
