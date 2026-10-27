@@ -25,7 +25,7 @@ jobs:
           sudo mv nextflow /usr/local/bin/
           nextflow -version
       - name: Validate test profile
-        run: nextflow config -profile test -c conf/ci.config
+        run: nextflow config -profile test
       - name: Generate deterministic tiny paired-end FASTQs
         run: python3 tests/make_ci_reads.py
       - name: Execute pipeline with containers
