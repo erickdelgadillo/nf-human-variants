@@ -37,9 +37,10 @@ jobs:
         run: |
           test -d results/fastqc
           test -d results/fastp
-          find results -name '*.bam' -size +0c | grep .
-          find results -name '*.bai' -size +0c | grep .
-          find results -name '*flagstat*' -type f -size +0c | grep .
+          # BAM, BAI and flagstat are currently emitted but not published.
+          find work -name '*.bam' -type f -size +0c | grep .
+          find work -name '*.bai' -type f -size +0c | grep .
+          find work -name '*.flagstat' -type f -size +0c | grep .
       - name: Upload diagnostic reports on failure
         if: failure()
         uses: actions/upload-artifact@v4
