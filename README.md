@@ -194,6 +194,8 @@ The test profile currently defines:
 
 This allows the workflow architecture to be tested rapidly without requiring large human sequencing datasets.
 
+GitHub Actions runs a Docker-backed synthetic paired-end smoke test of the currently implemented stages via `.github/workflows/ci.yml` (added in PR #22). This is **not** a variant-calling or clinical validation suite.
+
 Concrete executions and their outcomes should be recorded in:
 
 ```text
@@ -297,8 +299,8 @@ Upstream nf-core module code is kept unchanged.
 - [ ] Samplesheet-based input
 - [ ] Multi-sample validation
 - [ ] Small real human test dataset
-- [ ] Automated end-to-end testing
-- [ ] Continuous integration
+- [x] Automated synthetic-data smoke testing for implemented stages
+- [x] Continuous integration (Nextflow Docker smoke test; PR #22)
 - [ ] Production GRCh38 reference configuration
 
 ---
@@ -348,7 +350,7 @@ The initial implementation should remain minimal. Additional metadata such as li
 10. Add VEP and ClinVar annotation.
 11. Add MultiQC.
 12. Add reproducible GRCh38 configuration.
-13. Add automated testing and CI.
+13. Extend CI to multi-sample tests and variant calling once implemented.
 
 ---
 
