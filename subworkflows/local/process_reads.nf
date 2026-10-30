@@ -4,6 +4,7 @@ include { BWA_MEM2          } from '../../modules/local/bwa_mem2'
 include { SAMTOOLS_SORT     } from '../../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX    } from '../../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_FLAGSTAT } from '../../modules/nf-core/samtools/flagstat/main'
+include { SAMTOOLS_STATS    } from '../../modules/nf-core/samtools/stats/main'
 
 workflow PROCESS_READS {
 
@@ -11,6 +12,7 @@ workflow PROCESS_READS {
     reads_ch
     reference_fasta
     bwa_index
+    reference_stats
 
     main:
 
@@ -45,8 +47,14 @@ workflow PROCESS_READS {
         bam_bai_ch
     )
 
+    SAMTOOLS_STATS(
+    bam_bai_ch,
+    reference_stats
+)
+
     emit:
     bam      = SAMTOOLS_SORT.out.bam
     bai      = SAMTOOLS_INDEX.out.index
     flagstat = SAMTOOLS_FLAGSTAT.out.flagstat
+    stats    = SAMTOOLS_STATS.out.stats
 }
