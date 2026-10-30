@@ -26,8 +26,9 @@ workflow NF_HUMAN_VARIANTS {
     PREPARE_REFERENCE(reference_ch)
 
     PROCESS_READS(
-        reads_ch,
-        PREPARE_REFERENCE.out.fasta,
-        PREPARE_REFERENCE.out.bwa_index
+    reads_ch,
+    PREPARE_REFERENCE.out.fasta,
+    PREPARE_REFERENCE.out.bwa_index,
+    PREPARE_REFERENCE.out.stats_reference
     )
 }

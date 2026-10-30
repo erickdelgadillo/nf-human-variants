@@ -33,6 +33,10 @@ workflow PREPARE_REFERENCE {
         false
     )
 
+    reference_stats_ch = reference_gatk_ch.join(
+    SAMTOOLS_FAIDX.out.fai
+    )
+
     GATK4_CREATESEQUENCEDICTIONARY(
         reference_gatk_ch
     )
@@ -42,4 +46,5 @@ workflow PREPARE_REFERENCE {
     bwa_index   = BWA_MEM2_INDEX.out.index
     fai         = SAMTOOLS_FAIDX.out.fai
     dict        = GATK4_CREATESEQUENCEDICTIONARY.out.dict
+    stats_reference = reference_stats_ch
 }
